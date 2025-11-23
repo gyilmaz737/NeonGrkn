@@ -159,6 +159,7 @@
             border-color: #00ffff;
         }
 
+        /* BUTON STİLLERİ */
         .action-btn {
             background: linear-gradient(45deg, #00ffff, #0088ff);
             border: none;
@@ -180,24 +181,29 @@
         }
         .action-btn:active { transform: scale(0.95); opacity: 0.9; }
 
-        /* PAUSE BUTTON */
+        /* PAUSE BUTTON (GÜNCELLENDİ: ORTAYA ALINDI) */
         #pauseBtn {
             position: absolute;
-            top: env(safe-area-inset-top, 15px);
-            right: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.2rem;
+            top: env(safe-area-inset-top, 15px); /* Üstten güvenli boşluk */
+            left: 50%; /* Yatayda tam ortala */
+            transform: translateX(-50%); /* Kendi genişliğinin yarısı kadar geri çek */
+            background: rgba(0, 0, 0, 0.4); /* Hafif koyu zemin */
+            border: 1px solid rgba(255, 255, 255, 0.15); /* İnce çerçeve */
+            color: rgba(255, 255, 255, 0.7); /* Hafif gri yazı */
+            padding: 5px 20px;
+            border-radius: 20px;
+            font-size: 0.7rem;
             z-index: 110;
             cursor: pointer;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(4px);
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 2px;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        #pauseBtn:active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
         }
 
         .menu-btn {
@@ -308,8 +314,8 @@
 <div id="gameContainer">
     <canvas id="gameCanvas"></canvas>
 
-    <!-- PAUSE BUTTON -->
-    <div id="pauseBtn" class="hidden">⏸</div>
+    <!-- PAUSE BUTTON (YENİ TARZ) -->
+    <div id="pauseBtn" class="hidden">= PAUSE =</div>
 
     <!-- HUD -->
     <div id="hud" class="hidden">
@@ -532,7 +538,6 @@
     let obstacles = [];
     let particles = [];
 
-    // --- HAREKET FONKSİYONU (Mobil ve PC Ortak) ---
     function movePlayer(side) {
         if (side === 'left') {
             player.vx = -player.speed;
@@ -551,8 +556,6 @@
         }
     }
 
-    // --- EVENT LISTENERS ---
-    
     enterGameBtn.addEventListener('click', function() {
         initAudio();
         let name = playerNameInput.value.trim();
@@ -633,7 +636,6 @@
     window.addEventListener('resize', resize);
     resize();
 
-    // --- INPUT HANDLING (TOUCH & MOUSE) ---
     function handleTouch(e) {
         if (e.target === pauseBtn || e.target.closest('#pauseBtn')) return;
         if (gameState === 'PAUSED' || gameState === 'SETUP' || gameState === 'MENU' || gameState === 'GAMEOVER' || gameState === 'LEVELCOMPLETE' || gameState === 'LIFE_LOST') return;
@@ -652,17 +654,14 @@
             else if (e.type === 'mousedown') clientX = e.clientX;
 
             const mid = canvas.width / 2;
-            
             if (clientX < mid) movePlayer('left');
             else movePlayer('right');
         }
     }
 
-    // --- INPUT HANDLING (KEYBOARD) ---
     function handleKey(e) {
         if (gameState === 'PAUSED' || gameState === 'SETUP' || gameState === 'MENU' || gameState === 'GAMEOVER' || gameState === 'LEVELCOMPLETE' || gameState === 'LIFE_LOST') return;
 
-        // Bekleme durumunda herhangi bir tuş oyunu başlatır (Kontrol tuşları)
         if (gameState === 'WAITING') {
             if (e.code === 'ControlLeft' || e.code === 'ShiftRight') {
                 gameState = 'PLAYING';
@@ -690,8 +689,6 @@
     window.addEventListener('touchstart', handleTouch, {passive: false});
     window.addEventListener('mousedown', handleTouch);
     window.addEventListener('keydown', handleKey);
-
-    // --- GAME LOGIC ---
 
     function prepareGame() {
         lives = 3;
@@ -759,21 +756,33 @@
         obstacles = [];
         particles = [];
         for (let i = 0; i < 5; i++) {
-            spawnObstacle(-i * 350);
+            spawnObstacle(-i * 350); // Başlangıç aralığı
         }
     }
 
-    function spawnObstacle(yOffset) {
+    // --- YENİ: ÇAKIŞMA ÖNLEYİCİ SPAWN MANTIĞI ---
+    function spawnObstacle(overrideY = null) {
         const side = Math.random() < 0.5 ? 'left' : 'right';
         const width = canvas.width * (0.2 + Math.random() * 0.25);
         const height = 25;
+        
+        let spawnY = -200;
+        // Eğer manuel bir Y verilmediyse, en tepedeki engeli baz al
+        if (overrideY !== null) {
+            spawnY = overrideY;
+        } else if (obstacles.length > 0) {
+            // En üstteki (y'si en küçük olan) engeli bul
+            const topObs = obstacles.reduce((min, o) => o.y < min.y ? o : min, obstacles[0]);
+            spawnY = topObs.y - 350; // Sabit güvenli mesafe
+        }
+
         let moveChance = Math.max(0, (level - 2) * 0.15);
         moveChance = Math.min(0.8, moveChance);
         const isMoving = Math.random() < moveChance;
         
         obstacles.push({
             x: side === 'left' ? 0 : canvas.width - width,
-            y: yOffset,
+            y: spawnY,
             width: width,
             height: height,
             type: 'obstacle',
@@ -863,8 +872,7 @@
                 } else {
                     let isSideHit = (player.x < obs.x || player.x > obs.x + obs.width);
                     if (isSideHit) {
-                        movePlayer(player.x < obs.x ? 'left' : 'right'); // Bounce direction fix needed? No, movePlayer sets velocity.
-                        // Wait, bounce logic was simpler before. Let's revert to pure bounce
+                        movePlayer(player.x < obs.x ? 'left' : 'right');
                         player.vx *= -1.5;
                         if (player.x < obs.x) player.x = obs.x - player.radius - 2;
                         else player.x = obs.x + obs.width + player.radius + 2;
@@ -878,9 +886,10 @@
 
             if (obs.y > canvas.height + 100) {
                 obstacles.splice(index, 1);
+                // --- DÖNGÜSEL ENGEL YARATMA ---
                 if (obs.type === 'obstacle') {
                     score += 10 * level;
-                    if (!finishLineSpawned) spawnObstacle(-200);
+                    if (!finishLineSpawned) spawnObstacle(); // Parametresiz çağırarak çakışmayı önle
                 }
             }
         });
@@ -898,12 +907,20 @@
         });
     }
 
+    // --- YENİ: SOFTLOCK FIX ---
     function handleDeath() {
         if (player.invincibleTimer > 0) return;
         playTone(100, 'sawtooth', 0.3);
         lives--;
         updateHUD();
-        obstacles = obstacles.filter(o => Math.abs(o.y - player.y) > 300);
+        
+        // Engelleri temizle ama FİNİŞ ÇİZGİSİNİ KORU
+        obstacles = obstacles.filter(o => o.type === 'finish' || Math.abs(o.y - player.y) > 300);
+
+        // Eğer her şeyi sildiysek ve finiş gelmediyse, hemen yeni engel at (Softlock önleyici)
+        if (obstacles.length === 0 && !finishLineSpawned) {
+            spawnObstacle(-canvas.height / 2);
+        }
 
         if (lives > 0) {
             gameState = 'LIFE_LOST';
