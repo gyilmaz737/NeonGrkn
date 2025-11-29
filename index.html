@@ -4,15 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Neon Tırmanış - Gurkan Edition</title>
+    <meta name="description" content="Gürkan tarafından geliştirilen refleks oyunu.">
     
-    <!-- FIREBASE (Google Sunucularından Çeken En Stabil Sürüm) -->
+    <!-- FIREBASE KÜTÜPHANELERİ (Web Uyumlu) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
 
-        /* TEMEL AYARLAR */
+        /* GENEL AYARLAR */
         body { margin: 0; padding: 0; background-color: #050505; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; height: 100vh; width: 100vw; }
         #gameContainer { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%); transition: background 0.5s; }
         canvas { display: block; z-index: 1; }
@@ -21,17 +22,18 @@
         .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: auto; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(10px); z-index: 100; transition: opacity 0.3s; padding: 20px; box-sizing: border-box; }
         .hidden { opacity: 0 !important; pointer-events: none !important; display: none !important; }
         
-        /* TYPOGRAPHY & BUTTONS */
         h1 { font-size: 2rem; margin: 0 0 15px 0; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); }
-        .action-btn { background: linear-gradient(45deg, #00ffff, #0088ff); border: none; padding: 15px 40px; color: #000; font-size: 1.1rem; font-family: 'Orbitron', sans-serif; font-weight: 900; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px rgba(0, 255, 255, 0.4); margin-top: 10px; min-width: 200px; user-select: none; -webkit-tap-highlight-color: transparent; position: relative; z-index: 200; }
+        
+        /* BUTONLAR */
+        .action-btn { background: linear-gradient(45deg, #00ffff, #0088ff); border: none; padding: 15px 40px; color: #000; font-size: 1.1rem; font-family: 'Orbitron', sans-serif; font-weight: 900; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px rgba(0, 255, 255, 0.4); margin-top: 10px; min-width: 200px; user-select: none; -webkit-tap-highlight-color: transparent; position: relative; z-index: 200; transition: transform 0.1s; }
         .action-btn:active { transform: scale(0.95); opacity: 0.9; }
         .menu-btn { background: rgba(255, 255, 255, 0.1); border: 1px solid #00ffff; color: white; padding: 10px 20px; margin: 5px; width: 220px; font-family: 'Orbitron', sans-serif; font-size: 1rem; border-radius: 10px; cursor: pointer; }
         
-        /* INPUTS */
+        /* GİRİŞ ALANI */
         input[type="text"] { background: rgba(0,0,0,0.5); border: 2px solid #444; padding: 15px; color: white; font-family: 'Orbitron', sans-serif; font-size: 1.2rem; text-align: center; border-radius: 15px; width: 100%; max-width: 300px; outline: none; margin-bottom: 20px; }
         input[type="text"]:focus { border-color: #00ffff; }
 
-        /* LEADERBOARD */
+        /* LİDERLİK TABLOSU */
         #leaderboardScreen { overflow-y: auto; justify-content: flex-start; padding-top: 50px; }
         .score-list { width: 100%; max-width: 400px; margin-top: 20px; text-align: left; }
         .score-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem; }
@@ -40,7 +42,7 @@
         .score-item:nth-child(3) { color: #CD7F32; }
         .loading-text { color: #00ffff; animation: pulse 1s infinite; text-align: center; width: 100%; }
 
-        /* SETUP SCREEN */
+        /* SETUP */
         .palette-container { display: flex; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 15px; width: 100%; margin-bottom: 20px; }
         .palette-option { width: 40px; height: 40px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform 0.2s; }
         .palette-option.selected { border-color: #fff; transform: scale(1.1); box-shadow: 0 0 10px rgba(255,255,255,0.5); }
@@ -49,10 +51,11 @@
         .mode-btn.selected { background: rgba(0,255,255,0.2); border-color: #00ffff; color: #fff; }
         .setup-label { text-align: left; width: 100%; color: #aaa; font-size: 0.8rem; margin-bottom: 5px; }
 
-        /* HUD & CONTROLS */
-        #hud { position: absolute; top: env(safe-area-inset-top, 15px); left: 0; width: 100%; display: flex; justify-content: space-between; padding: 10px 20px; box-sizing: border-box; pointer-events: none; z-index: 10; }
+        /* HUD & KONTROLLER */
+        #hud { position: absolute; top: 15px; left: 0; width: 100%; display: flex; justify-content: space-between; padding: 10px 20px; box-sizing: border-box; pointer-events: none; z-index: 10; }
         #livesDisplay { color: #ff3333; font-size: 1.2rem; }
-        #pauseBtn { position: absolute; top: env(safe-area-inset-top, 15px); left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.15); color: rgba(255, 255, 255, 0.7); padding: 5px 20px; border-radius: 20px; font-size: 0.7rem; z-index: 110; cursor: pointer; pointer-events: auto; backdrop-filter: blur(4px); letter-spacing: 2px; white-space: nowrap; transition: all 0.2s; }
+        
+        #pauseBtn { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.15); color: rgba(255, 255, 255, 0.7); padding: 5px 20px; border-radius: 20px; font-size: 0.7rem; z-index: 110; cursor: pointer; pointer-events: auto; backdrop-filter: blur(4px); letter-spacing: 2px; white-space: nowrap; transition: all 0.2s; }
         #pauseBtn:active { background: rgba(255, 255, 255, 0.2); color: white; }
         
         .control-panel { position: absolute; bottom: 0; width: 50%; height: 40%; pointer-events: none; transition: background 0.15s; z-index: 5; border-top: 1px solid rgba(255,255,255,0.05); }
@@ -70,10 +73,8 @@
 <div id="gameContainer">
     <canvas id="gameCanvas"></canvas>
     
-    <!-- PAUSE BUTONU -->
     <div id="pauseBtn" class="hidden">= PAUSE =</div>
 
-    <!-- HUD -->
     <div id="hud" class="hidden">
         <div>
             <div id="livesDisplay">❤❤❤</div>
@@ -89,42 +90,37 @@
     <div id="leftPanel" class="control-panel hidden"><div class="control-letter">L</div></div>
     <div id="rightPanel" class="control-panel hidden"><div class="control-letter">R</div></div>
 
-    <!-- 1. SETUP EKRANI -->
+    <!-- 1. SETUP -->
     <div id="setupScreen" class="ui-layer">
         <h1>NEON<br>ASCENT</h1>
         <div class="setup-label">İSİM</div>
         <input type="text" id="playerNameInput" placeholder="RUMUZ GİR" maxlength="12" autocomplete="off">
-        
         <div class="setup-label">TEMA</div>
         <div class="palette-container" id="paletteSelector"></div>
-        
         <div class="setup-label">MOD</div>
         <div class="mode-container">
             <div class="mode-btn selected" data-mode="dynamic">AKICI<br><span style="font-size:0.6rem">Sürekli Akar</span></div>
             <div class="mode-btn" data-mode="tactical">TAKTİK<br><span style="font-size:0.6rem">Duraklamalı</span></div>
         </div>
-        
         <button id="enterGameBtn" class="action-btn">OYUNA BAŞLA</button>
         <button id="showLeaderboardBtn" class="menu-btn" style="margin-top:20px; border-color:#ffcc00; color:#ffcc00;">🏆 LİDERLİK TABLOSU</button>
     </div>
 
-    <!-- 2. LİDERLİK TABLOSU -->
+    <!-- 2. LEADERBOARD -->
     <div id="leaderboardScreen" class="ui-layer hidden">
         <h1 style="color:#ffcc00;">EN İYİLER</h1>
-        <div id="leaderboardList" class="score-list">
-            <div class="loading-text">Yükleniyor...</div>
-        </div>
+        <div id="leaderboardList" class="score-list"><div class="loading-text">Yükleniyor...</div></div>
         <button id="closeLeaderboardBtn" class="menu-btn" style="margin-top:30px;">GERİ DÖN</button>
     </div>
 
-    <!-- 3. BAŞLAMA EKRANI -->
+    <!-- 3. START -->
     <div id="startScreen" class="ui-layer hidden">
         <h1>HAZIR MISIN?</h1>
         <p style="color:#ccc;">5. Bölüm ve katlarında<br><span style="color:#ff3333">CAN</span> kazanırsın!</p>
         <button id="startBtn" class="action-btn">BAŞLAT</button>
     </div>
 
-    <!-- 4. PAUSE MENÜSÜ -->
+    <!-- 4. PAUSE -->
     <div id="pauseMenu" class="ui-layer hidden">
         <h1>DURAKLATILDI</h1>
         <button id="resumeBtn" class="menu-btn">DEVAM ET</button>
@@ -132,7 +128,7 @@
         <button id="backToStartBtn" class="menu-btn" style="border-color:#ff3333;">ÇIKIŞ</button>
     </div>
 
-    <!-- 5. OYUN BİTTİ -->
+    <!-- 5. GAME OVER -->
     <div id="gameOverScreen" class="ui-layer hidden">
         <h1 style="color: #ff3333;">OYUN BİTTİ</h1>
         <div style="font-size:1.5rem; margin:20px;" id="finalScoreDisplay">SKOR: 0</div>
@@ -140,14 +136,14 @@
         <button id="goBackBtn" class="menu-btn">MENÜYE DÖN</button>
     </div>
 
-    <!-- 6. BÖLÜM GEÇİLDİ -->
+    <!-- 6. LEVEL COMPLETE -->
     <div id="levelCompleteScreen" class="ui-layer hidden">
         <h1 style="color: #33ff33;">BAŞARDIN!</h1>
         <p id="levelMsg" style="color:#ccc;">Bölüm Tamamlandı.</p>
         <button id="nextLevelBtn" class="action-btn">DEVAM</button>
     </div>
     
-    <!-- 7. CAN KAYBI -->
+    <!-- 7. LIFE LOST -->
     <div id="lifeLostScreen" class="ui-layer hidden">
         <h1 style="color: #ffaa00;">DİKKAT!</h1>
         <p id="lifeMsg">Canın Kaldı.</p>
@@ -156,7 +152,7 @@
 </div>
 
 <script>
-    // --- FIREBASE AYARLARI ---
+    // --- FIREBASE AYARLARI (GÜRKAN'IN PROJESİ) ---
     const firebaseConfig = {
         apiKey: "AIzaSyCZZRiMNicsrrrtFtlUczb5qr-CGo-R4yk",
         authDomain: "neonascent-5634b.firebaseapp.com",
@@ -167,69 +163,55 @@
     };
 
     let db;
-    // Firebase Bağlantısı (Hata Yönetimli)
     try {
-        if(typeof firebase !== 'undefined') {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-            console.log("Firebase Veritabanı Bağlandı.");
-        } else {
-            console.error("Firebase SDK yüklenemedi. İnternet bağlantısını kontrol et.");
-        }
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        console.log("Firebase Bağlandı.");
     } catch (e) {
         console.error("Firebase Hatası:", e);
     }
 
-    // --- REKOR KAYDETME ---
+    // --- REKOR FONKSİYONLARI ---
     function saveScoreToCloud(name, score) {
-        if (!db) { console.log("DB yok, skor kaydedilemedi."); return; }
+        if (!db) return;
         db.collection("neon_scores").add({
             name: name,
             score: score,
             date: firebase.firestore.FieldValue.serverTimestamp()
         })
         .then(() => console.log("Skor kaydedildi."))
-        .catch((error) => console.error("Skor hatası:", error));
+        .catch((err) => console.error("Skor hatası:", err));
     }
 
-    // --- REKORLARI ÇEKME ---
     function fetchLeaderboard() {
-        if (!db) {
-            document.getElementById('leaderboardList').innerHTML = "<div style='text-align:center'>Bağlantı Yok</div>";
-            return;
-        }
         const list = document.getElementById('leaderboardList');
+        if (!db) { list.innerHTML = "<div style='text-align:center'>Veritabanı Bağlantısı Yok</div>"; return; }
+        
         list.innerHTML = '<div class="loading-text">Yükleniyor...</div>';
-
-        db.collection("neon_scores")
-          .orderBy("score", "desc")
-          .limit(10)
-          .get()
-          .then((querySnapshot) => {
+        
+        db.collection("neon_scores").orderBy("score", "desc").limit(10).get()
+          .then((snapshot) => {
               let html = "";
               let rank = 1;
-              querySnapshot.forEach((doc) => {
+              snapshot.forEach((doc) => {
                   const data = doc.data();
-                  // İsim güvenliği
-                  const safeName = data.name ? data.name.replace(/</g, "&lt;") : "Anonim";
+                  const safeName = data.name ? data.name.replace(/</g, "&lt;") : "Bilinmeyen";
                   html += `<div class="score-item"><span>#${rank} ${safeName}</span><span>${data.score}</span></div>`;
                   rank++;
               });
-              if (html === "") html = "<div style='text-align:center'>Henüz rekor yok.</div>";
-              list.innerHTML = html;
+              list.innerHTML = html === "" ? "<div style='text-align:center'>Henüz rekor yok.</div>" : html;
           })
-          .catch((error) => {
+          .catch((err) => {
               list.innerHTML = "Veri alınamadı.";
-              console.error(error);
+              console.error(err);
           });
     }
 
-    // --- OYUN DEĞİŞKENLERİ ---
+    // --- OYUN MOTORU ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    // Renk Temaları
     const themes = [
         { name: 'SİBER', bg: ['#1a1a1a', '#000000'], player: '#00ffff', obs1: '#ff00cc', obs2: '#3333ff' },
         { name: 'ZEHİR', bg: ['#0a1a0a', '#000000'], player: '#00ff00', obs1: '#9900ff', obs2: '#ccff00' },
@@ -239,19 +221,6 @@
     let currentTheme = themes[0];
     let selectedGameMode = 'dynamic';
 
-    let gameState = 'SETUP';
-    let animationId;
-    let playerName = "OYUNCU";
-    let score = 0, level = 1, lives = 3;
-    const MAX_LIVES = 5;
-    let obstacles = [], particles = [];
-    let scrollSpeed = 0, distanceTraveled = 0, levelDistance = 2000;
-    let finishLineSpawned = false;
-    let isMuted = false;
-
-    const player = { x: 0, y: 0, radius: 10, vx: 0, vy: 0, speed: 9, jumpPower: -11, onGround: false, invincibleTimer: 0 };
-
-    // --- UI ELEMENTLERİNİ SEÇ ---
     const screens = {
         setup: document.getElementById('setupScreen'),
         leaderboard: document.getElementById('leaderboardScreen'),
@@ -261,39 +230,32 @@
         life: document.getElementById('lifeLostScreen'),
         pause: document.getElementById('pauseMenu')
     };
-    const hud = document.getElementById('hud');
-    const pauseBtn = document.getElementById('pauseBtn');
-    const panels = [document.getElementById('leftPanel'), document.getElementById('rightPanel')];
-    const nameInput = document.getElementById('playerNameInput');
-    const displays = {
-        name: document.getElementById('playerNameDisplay'),
-        score: document.getElementById('scoreDisplay'),
-        level: document.getElementById('levelDisplay'),
-        lives: document.getElementById('livesDisplay'),
+    
+    const els = {
+        hud: document.getElementById('hud'),
+        pauseBtn: document.getElementById('pauseBtn'),
+        panels: [document.getElementById('leftPanel'), document.getElementById('rightPanel')],
+        nameInput: document.getElementById('playerNameInput'),
+        nameDisplay: document.getElementById('playerNameDisplay'),
+        scoreDisplay: document.getElementById('scoreDisplay'),
+        levelDisplay: document.getElementById('levelDisplay'),
+        livesDisplay: document.getElementById('livesDisplay'),
         finalScore: document.getElementById('finalScoreDisplay'),
         levelMsg: document.getElementById('levelMsg'),
         lifeMsg: document.getElementById('lifeMsg')
     };
 
-    // --- SES FONKSİYONLARI ---
-    function initAudio() { if(audioCtx.state === 'suspended') audioCtx.resume(); }
-    
-    function playTone(freq, type, duration, vol = 0.1) {
-        if (isMuted || audioCtx.state === 'suspended') return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
-    }
+    let gameState = 'SETUP';
+    let animationId;
+    let playerName = "OYUNCU";
+    let score=0, level=1, lives=3;
+    const MAX_LIVES = 5;
+    let obstacles=[], particles=[];
+    let scrollSpeed=0, distanceTraveled=0, levelDistance=2000, finishLineSpawned=false;
+    let isMuted = false;
+    const player = { x:0, y:0, radius:10, vx:0, vy:0, speed:9, jumpPower:-11, onGround:false, invincibleTimer:0 };
 
-    // --- SETUP EKRANI BAŞLATMA ---
-    // Tema Seçici Butonları
+    // --- SETUP UI ---
     const paletteSelector = document.getElementById('paletteSelector');
     themes.forEach((t, i) => {
         const btn = document.createElement('div');
@@ -308,7 +270,6 @@
         paletteSelector.appendChild(btn);
     });
 
-    // Mod Seçici Butonları
     const modeBtns = document.querySelectorAll('.mode-btn');
     modeBtns.forEach(btn => {
         btn.onclick = () => {
@@ -318,95 +279,69 @@
         };
     });
 
-    // --- BUTON OLAYLARI ---
+    // --- SES ---
+    function initAudio() { if(audioCtx.state === 'suspended') audioCtx.resume(); }
+    function playTone(freq, type, duration, vol=0.1) {
+        if(isMuted || audioCtx.state==='suspended') return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
+    }
+
+    // --- BUTTON ACTIONS ---
     document.getElementById('enterGameBtn').onclick = () => {
         initAudio();
-        let val = nameInput.value.trim();
+        let val = els.nameInput.value.trim();
         playerName = val ? val.toUpperCase() : "MİSAFİR";
-        displays.name.innerText = playerName;
+        els.nameDisplay.innerText = playerName;
         screens.setup.classList.add('hidden');
         screens.start.classList.remove('hidden');
         gameState = 'MENU';
     };
 
-    document.getElementById('showLeaderboardBtn').onclick = () => {
-        fetchLeaderboard();
-        screens.setup.classList.add('hidden');
-        screens.leaderboard.classList.remove('hidden');
-    };
-    document.getElementById('closeLeaderboardBtn').onclick = () => {
-        screens.leaderboard.classList.add('hidden');
-        screens.setup.classList.remove('hidden');
-    };
-
+    document.getElementById('showLeaderboardBtn').onclick = () => { fetchLeaderboard(); screens.setup.classList.add('hidden'); screens.leaderboard.classList.remove('hidden'); };
+    document.getElementById('closeLeaderboardBtn').onclick = () => { screens.leaderboard.classList.add('hidden'); screens.setup.classList.remove('hidden'); };
     document.getElementById('startBtn').onclick = () => { initAudio(); prepareGame(); };
     document.getElementById('retryBtn').onclick = () => { initAudio(); restartGame(); };
     document.getElementById('nextLevelBtn').onclick = () => { initAudio(); nextLevel(); };
     document.getElementById('continueBtn').onclick = () => {
-        screens.life.classList.add('hidden');
-        showGameUI();
-        player.invincibleTimer = 60; // 1 saniye koruma
-        gameState = 'PLAYING';
-        gameLoop();
+        screens.life.classList.add('hidden'); showGameUI(); player.invincibleTimer=60; gameState='PLAYING'; gameLoop();
     };
     document.getElementById('goBackBtn').onclick = () => {
-        screens.gameOver.classList.add('hidden');
-        screens.setup.classList.remove('hidden');
-        gameState = 'SETUP';
+        screens.gameOver.classList.add('hidden'); screens.setup.classList.remove('hidden'); gameState='SETUP';
     };
+    
+    els.pauseBtn.onclick = () => { if(gameState==='PLAYING'){ gameState='PAUSED'; els.pauseBtn.classList.add('hidden'); screens.pause.classList.remove('hidden'); hideGameUI(); } };
+    document.getElementById('resumeBtn').onclick = () => { screens.pause.classList.add('hidden'); showGameUI(); gameState='PLAYING'; gameLoop(); };
+    document.getElementById('toggleSoundBtn').onclick = function() { isMuted=!isMuted; this.innerText=isMuted?"SES: KAPALI 🔇":"SES: AÇIK 🔊"; };
+    document.getElementById('backToStartBtn').onclick = () => { screens.pause.classList.add('hidden'); screens.setup.classList.remove('hidden'); gameState='SETUP'; };
 
-    // Pause
-    pauseBtn.onclick = () => {
-        if(gameState === 'PLAYING') {
-            gameState = 'PAUSED';
-            pauseBtn.classList.add('hidden');
-            screens.pause.classList.remove('hidden');
-            hideGameUI();
-        }
-    };
-    document.getElementById('resumeBtn').onclick = () => {
-        screens.pause.classList.add('hidden');
-        showGameUI();
-        gameState = 'PLAYING';
-        gameLoop();
-    };
-    document.getElementById('toggleSoundBtn').onclick = function() {
-        isMuted = !isMuted;
-        this.innerText = isMuted ? "SES: KAPALI 🔇" : "SES: AÇIK 🔊";
-    };
-    document.getElementById('backToStartBtn').onclick = () => {
-        screens.pause.classList.add('hidden');
-        screens.setup.classList.remove('hidden');
-        gameState = 'SETUP';
-    };
-
-    // --- OYUN DÖNGÜSÜ YARDIMCILARI ---
-    function showGameUI() { hud.classList.remove('hidden'); pauseBtn.classList.remove('hidden'); panels.forEach(p=>p.classList.remove('hidden')); }
-    function hideGameUI() { hud.classList.add('hidden'); pauseBtn.classList.add('hidden'); panels.forEach(p=>p.classList.add('hidden')); }
+    // --- GAME HELPERS ---
+    function showGameUI() { els.hud.classList.remove('hidden'); els.pauseBtn.classList.remove('hidden'); els.panels.forEach(p=>p.classList.remove('hidden')); }
+    function hideGameUI() { els.hud.classList.add('hidden'); els.pauseBtn.classList.add('hidden'); els.panels.forEach(p=>p.classList.add('hidden')); }
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; player.radius = canvas.width * 0.03; }
     window.addEventListener('resize', resize); resize();
 
     function prepareGame() { level=1; score=0; lives=3; loadLevel(); screens.start.classList.add('hidden'); resetPlayerPos(); showGameUI(); gameState='PLAYING'; gameLoop(); }
     function restartGame() { lives=3; score=0; level=1; loadLevel(); screens.gameOver.classList.add('hidden'); resetPlayerPos(); showGameUI(); gameState='PLAYING'; gameLoop(); }
     function nextLevel() { level++; loadLevel(); screens.level.classList.add('hidden'); resetPlayerPos(); showGameUI(); gameState='PLAYING'; gameLoop(); }
-
-    function resetPlayerPos() { player.x = canvas.width/2; player.y = canvas.height-200; player.vx=0; player.vy=0; player.invincibleTimer=0; player.onGround=false; }
+    function resetPlayerPos() { player.x=canvas.width/2; player.y=canvas.height-200; player.vx=0; player.vy=0; player.invincibleTimer=0; player.onGround=false; }
 
     function loadLevel() {
         levelDistance = 2000 + (level*500); distanceTraveled=0; finishLineSpawned=false; obstacles=[]; particles=[];
         for(let i=0; i<5; i++) spawnObstacle(-i*350);
     }
 
-    // Engel Yaratma (Çakışma Önleyici ile)
     function spawnObstacle(yOv) {
         const side = Math.random()<0.5?'left':'right';
         const w = canvas.width*(0.25+Math.random()*0.2);
         let sy = -200;
         if(yOv!==undefined) sy=yOv;
-        else if(obstacles.length>0) {
-            const top = obstacles.reduce((m,o)=>o.y<m.y?o:m, obstacles[0]);
-            sy = top.y - 350;
-        }
+        else if(obstacles.length>0) { const top=obstacles.reduce((m,o)=>o.y<m.y?o:m, obstacles[0]); sy=top.y-350; }
         
         obstacles.push({
             x: side==='left'?0:canvas.width-w, y:sy, width:w, height:25, type:'obstacle',
@@ -416,13 +351,13 @@
         });
     }
 
-    // --- KONTROLLER ---
     function handleInput(e) {
         if(gameState!=='PLAYING') return;
         e.preventDefault();
         const x = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
         movePlayer(x < canvas.width/2 ? 'left' : 'right');
     }
+    
     function handleKey(e) {
         if(gameState!=='PLAYING') return;
         if(e.code==='ControlLeft') movePlayer('left');
@@ -433,7 +368,7 @@
         player.onGround = false;
         player.vx = side==='left' ? -player.speed : player.speed;
         player.vy = player.jumpPower;
-        const p = side==='left' ? panels[0] : panels[1];
+        const p = side==='left' ? els.panels[0] : els.panels[1];
         p.classList.add(side==='left'?'panel-active-left':'panel-active-right');
         setTimeout(()=>p.className='control-panel', 150);
         createParticles(player.x, player.y, 5, '#fff');
@@ -444,23 +379,19 @@
     window.addEventListener('mousedown', handleInput);
     window.addEventListener('keydown', handleKey);
 
-    // --- UPDATE ---
+    // --- MAIN LOOP ---
     function update() {
         if(player.invincibleTimer>0) player.invincibleTimer--;
         if(!player.onGround) player.vy+=0.6; else player.vy=0;
         player.x+=player.vx; player.y+=player.vy;
 
-        // Duvarlar
-        if(player.x < player.radius) { player.x=player.radius; player.vx=0; }
-        if(player.x > canvas.width-player.radius) { player.x=canvas.width-player.radius; player.vx=0; }
+        if(player.x<player.radius) { player.x=player.radius; player.vx=0; }
+        if(player.x>canvas.width-player.radius) { player.x=canvas.width-player.radius; player.vx=0; }
 
-        // Scroll
         let baseScroll = 2+level*0.2;
         let catchUp = 0;
-        if(player.y < canvas.height*0.45) {
-            catchUp = (canvas.height*0.45) - player.y;
-            player.y = canvas.height*0.45;
-        }
+        if(player.y < canvas.height*0.45) { catchUp=(canvas.height*0.45)-player.y; player.y=canvas.height*0.45; }
+        
         scrollSpeed = (selectedGameMode==='tactical' && player.onGround) ? catchUp : baseScroll+catchUp;
         distanceTraveled += scrollSpeed;
 
@@ -477,7 +408,6 @@
                 if(o.x+o.width>canvas.width || o.x<0) o.speed*=-1;
             }
 
-            // Çarpışma
             let tx = Math.max(o.x, Math.min(player.x, o.x+o.width));
             let ty = Math.max(o.y, Math.min(player.y, o.y+o.height));
             if(Math.sqrt((player.x-tx)**2 + (player.y-ty)**2) <= player.radius) {
@@ -499,10 +429,9 @@
 
         if(player.y > canvas.height) handleDeath();
         
-        // HUD Update
-        displays.lives.innerText = "❤".repeat(lives);
-        displays.score.innerText = score.toString().padStart(4,'0');
-        displays.level.innerText = "LVL "+level;
+        els.livesDisplay.innerText = "❤".repeat(lives);
+        els.scoreDisplay.innerText = score.toString().padStart(4,'0');
+        els.levelDisplay.innerText = "LVL "+level;
 
         particles.forEach((p,i)=>{ p.x+=p.vx; p.y+=p.vy; p.life-=0.05; if(p.life<=0) particles.splice(i,1); });
     }
@@ -510,15 +439,13 @@
     function handleDeath() {
         if(player.invincibleTimer>0) return;
         lives--; playTone(100,'sawtooth',0.3);
-        
-        // Softlock Fix: Finiş harici tüm engelleri silme ama oyuncuya yer aç
-        obstacles = obstacles.filter(o => o.type==='finish' || Math.abs(o.y - player.y) > 300);
+        obstacles = obstacles.filter(o=>o.type==='finish'||Math.abs(o.y-player.y)>300);
         if(obstacles.length===0 && !finishLineSpawned) spawnObstacle(-canvas.height/2);
 
         if(lives>0) {
             gameState='LIFE_LOST'; cancelAnimationFrame(animationId);
             hideGameUI();
-            displays.lifeMsg.innerText = `${lives} Canın Kaldı.`;
+            els.lifeMsg.innerText = `${lives} Canın Kaldı.`;
             screens.life.classList.remove('hidden');
         } else endGame();
     }
@@ -527,7 +454,7 @@
         saveScoreToCloud(playerName, score);
         gameState='GAMEOVER'; cancelAnimationFrame(animationId);
         hideGameUI();
-        displays.finalScore.innerText = `SKOR: ${score}`;
+        els.finalScore.innerText = `SKOR: ${score}`;
         screens.gameOver.classList.remove('hidden');
     }
 
@@ -538,10 +465,7 @@
             if(lives<MAX_LIVES) { lives++; msg="BONUS CAN KAZANDIN! ❤"; playTone(600,'sine',0.2); }
             else { score+=2000; msg="BONUS PUAN! (+2000)"; playTone(800,'square',0.4); }
         } else playTone(800,'square',0.4);
-        
-        displays.levelMsg.innerText=msg;
-        hideGameUI();
-        screens.level.classList.remove('hidden');
+        els.levelMsg.innerText=msg; hideGameUI(); screens.level.classList.remove('hidden');
     }
 
     function createParticles(x,y,c,color) { for(let i=0;i<c;i++) particles.push({x,y,vx:(Math.random()-0.5)*10,vy:(Math.random()-0.5)*10,life:1,color}); }
@@ -549,17 +473,12 @@
     function draw() {
         ctx.fillStyle='rgba(5,5,5,0.4)'; ctx.fillRect(0,0,canvas.width,canvas.height);
         obstacles.forEach(o=>{
-            ctx.fillStyle=o.type==='finish'?'#00ff00':o.color;
-            ctx.shadowBlur=10; ctx.shadowColor=o.color;
+            ctx.fillStyle=o.type==='finish'?'#00ff00':o.color; ctx.shadowBlur=10; ctx.shadowColor=o.color;
             ctx.fillRect(o.x,o.y,o.width,o.height);
         });
         ctx.beginPath(); ctx.arc(player.x,player.y,player.radius,0,Math.PI*2);
         ctx.fillStyle=currentTheme.player; ctx.shadowBlur=20; ctx.shadowColor=currentTheme.player; ctx.fill();
-        
-        particles.forEach(p=>{
-            ctx.beginPath(); ctx.arc(p.x,p.y,3,0,Math.PI*2);
-            ctx.fillStyle=p.color; ctx.globalAlpha=p.life; ctx.fill();
-        });
+        particles.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x,p.y,3,0,Math.PI*2); ctx.fillStyle=p.color; ctx.globalAlpha=p.life; ctx.fill(); });
         ctx.globalAlpha=1;
     }
 
