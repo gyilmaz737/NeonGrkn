@@ -3,482 +3,283 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Neon Tırmanış - Gurkan Edition</title>
+    
+    <!-- FIREBASE (Google Sunucularından Çeken En Stabil Sürüm) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
 
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #050505;
-            color: white;
-            font-family: 'Orbitron', sans-serif;
-            overflow: hidden;
-            touch-action: none;
-            user-select: none;
-            -webkit-user-select: none;
-            height: 100vh;
-            width: 100vw;
-        }
-
-        #gameContainer {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
-            transition: background 0.5s;
-        }
-
+        /* TEMEL AYARLAR */
+        body { margin: 0; padding: 0; background-color: #050505; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; height: 100vh; width: 100vw; }
+        #gameContainer { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%); transition: background 0.5s; }
         canvas { display: block; z-index: 1; }
-
-        /* UI Katmanları */
-        .ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: auto;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.95);
-            backdrop-filter: blur(10px);
-            z-index: 100;
-            transition: opacity 0.3s;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .hidden {
-            opacity: 0 !important;
-            pointer-events: none !important;
-            display: none !important;
-        }
-
-        h1 {
-            font-size: 2rem;
-            margin: 0 0 15px 0;
-            color: #fff;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 15px rgba(255,255,255,0.5);
-        }
-
-        /* Setup Grubu */
-        .setup-group {
-            margin-bottom: 20px;
-            width: 100%;
-            max-width: 400px;
-        }
-
-        .setup-label {
-            font-size: 0.8rem;
-            color: #aaa;
-            margin-bottom: 8px;
-            text-align: left;
-            padding-left: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .palette-container {
-            display: flex;
-            justify-content: space-between;
-            background: rgba(255,255,255,0.05);
-            padding: 10px;
-            border-radius: 15px;
-        }
-
-        .palette-option {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: transform 0.2s, border-color 0.2s;
-            position: relative;
-        }
-        .palette-option.selected {
-            border-color: #fff;
-            transform: scale(1.1);
-            box-shadow: 0 0 15px rgba(255,255,255,0.5);
-        }
-
-        .mode-container {
-            display: flex;
-            gap: 10px;
-        }
-
-        .mode-btn {
-            flex: 1;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 15px;
-            border-radius: 10px;
-            color: #888;
-            font-family: 'Orbitron', sans-serif;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .mode-btn.selected {
-            background: rgba(0, 255, 255, 0.2);
-            border-color: #00ffff;
-            color: #fff;
-            text-shadow: 0 0 5px #00ffff;
-        }
-        .mode-desc {
-            font-size: 0.6rem;
-            display: block;
-            margin-top: 5px;
-            opacity: 0.7;
-        }
-
-        input[type="text"] {
-            background: rgba(0,0,0,0.5);
-            border: 2px solid #444;
-            padding: 15px;
-            color: white;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.2rem;
-            text-align: center;
-            border-radius: 15px;
-            width: 100%;
-            outline: none;
-            box-sizing: border-box;
-            transition: border-color 0.3s;
-        }
-        input[type="text"]:focus {
-            border-color: #00ffff;
-        }
-
-        /* BUTON STİLLERİ */
-        .action-btn {
-            background: linear-gradient(45deg, #00ffff, #0088ff);
-            border: none;
-            padding: 15px 50px;
-            color: #000;
-            font-size: 1.2rem;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 900;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
-            transition: all 0.1s;
-            text-transform: uppercase;
-            margin-top: 10px;
-            user-select: none;
-            position: relative;
-            z-index: 200;
-            -webkit-tap-highlight-color: transparent;
-        }
+        
+        /* UI KATMANLARI */
+        .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: auto; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(10px); z-index: 100; transition: opacity 0.3s; padding: 20px; box-sizing: border-box; }
+        .hidden { opacity: 0 !important; pointer-events: none !important; display: none !important; }
+        
+        /* TYPOGRAPHY & BUTTONS */
+        h1 { font-size: 2rem; margin: 0 0 15px 0; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); }
+        .action-btn { background: linear-gradient(45deg, #00ffff, #0088ff); border: none; padding: 15px 40px; color: #000; font-size: 1.1rem; font-family: 'Orbitron', sans-serif; font-weight: 900; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px rgba(0, 255, 255, 0.4); margin-top: 10px; min-width: 200px; user-select: none; -webkit-tap-highlight-color: transparent; position: relative; z-index: 200; }
         .action-btn:active { transform: scale(0.95); opacity: 0.9; }
-
-        /* PAUSE BUTTON (GÜNCELLENDİ: ORTAYA ALINDI) */
-        #pauseBtn {
-            position: absolute;
-            top: env(safe-area-inset-top, 15px); /* Üstten güvenli boşluk */
-            left: 50%; /* Yatayda tam ortala */
-            transform: translateX(-50%); /* Kendi genişliğinin yarısı kadar geri çek */
-            background: rgba(0, 0, 0, 0.4); /* Hafif koyu zemin */
-            border: 1px solid rgba(255, 255, 255, 0.15); /* İnce çerçeve */
-            color: rgba(255, 255, 255, 0.7); /* Hafif gri yazı */
-            padding: 5px 20px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            z-index: 110;
-            cursor: pointer;
-            backdrop-filter: blur(4px);
-            font-family: 'Orbitron', sans-serif;
-            letter-spacing: 2px;
-            white-space: nowrap;
-            transition: all 0.2s;
-        }
-        #pauseBtn:active {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-        }
-
-        .menu-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid #00ffff;
-            color: white;
-            padding: 15px 30px;
-            margin: 10px;
-            width: 250px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.1rem;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .menu-btn:active { background: rgba(0, 255, 255, 0.2); }
-
-        /* HUD & Signature */
-        #hud {
-            position: absolute;
-            top: env(safe-area-inset-top, 15px);
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 20px;
-            box-sizing: border-box;
-            pointer-events: none;
-            z-index: 10;
-        }
-        .hud-group { display: flex; flex-direction: column; gap: 2px; }
-        .hud-text { font-size: 0.9rem; color: rgba(255,255,255,0.8); text-shadow: 0 0 5px black; }
-        #livesDisplay { color: #ff3333; font-size: 1.2rem; letter-spacing: 2px; text-shadow: 0 0 10px #ff0000; margin-bottom: 0; }
-        .signature { font-size: 0.55rem; color: rgba(255,255,255,0.4); text-transform: lowercase; letter-spacing: 1px; margin-bottom: 5px; font-style: italic; }
-
-        /* Progress Bar */
-        #progressBarContainer {
-            position: absolute; right: 2px; top: 0; width: 3px; height: 100%;
-            background: rgba(255, 255, 255, 0.05); z-index: 9;
-        }
-        #progressBar {
-            width: 100%; height: 0%; background: #fff;
-            box-shadow: 0 0 8px #fff; position: absolute; bottom: 0;
-            transition: height 0.1s linear;
-        }
-
-        /* Kontrol Panelleri */
-        .control-panel {
-            position: absolute; bottom: 0; width: 50%; height: 40%;
-            pointer-events: none; display: flex; justify-content: center; align-items: center;
-            transition: background 0.15s; z-index: 5;
-            border-top: 1px solid rgba(255,255,255,0.05);
-        }
+        .menu-btn { background: rgba(255, 255, 255, 0.1); border: 1px solid #00ffff; color: white; padding: 10px 20px; margin: 5px; width: 220px; font-family: 'Orbitron', sans-serif; font-size: 1rem; border-radius: 10px; cursor: pointer; }
         
-        #leftPanel { 
-            left: 0; 
-            border-right: 1px solid rgba(255,255,255,0.05); 
-            background: linear-gradient(to top, rgba(0, 50, 0, 0.6), rgba(0, 20, 0, 0.1));
-        }
-        
-        #rightPanel { 
-            right: 0; 
-            background: linear-gradient(to top, rgba(50, 0, 0, 0.6), rgba(20, 0, 0, 0.1));
-        }
-        
-        .control-letter {
-            font-size: 8rem; font-weight: 900; opacity: 0.2; color: white; pointer-events: none;
-        }
+        /* INPUTS */
+        input[type="text"] { background: rgba(0,0,0,0.5); border: 2px solid #444; padding: 15px; color: white; font-family: 'Orbitron', sans-serif; font-size: 1.2rem; text-align: center; border-radius: 15px; width: 100%; max-width: 300px; outline: none; margin-bottom: 20px; }
+        input[type="text"]:focus { border-color: #00ffff; }
 
-        .panel-active-left {
-            background: linear-gradient(to top, rgba(0, 150, 0, 0.8), rgba(0, 50, 0, 0.3)) !important;
-        }
-        .panel-active-right {
-            background: linear-gradient(to top, rgba(150, 0, 0, 0.8), rgba(50, 0, 0, 0.3)) !important;
-        }
+        /* LEADERBOARD */
+        #leaderboardScreen { overflow-y: auto; justify-content: flex-start; padding-top: 50px; }
+        .score-list { width: 100%; max-width: 400px; margin-top: 20px; text-align: left; }
+        .score-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem; }
+        .score-item:nth-child(1) { color: #FFD700; font-weight: bold; }
+        .score-item:nth-child(2) { color: #C0C0C0; }
+        .score-item:nth-child(3) { color: #CD7F32; }
+        .loading-text { color: #00ffff; animation: pulse 1s infinite; text-align: center; width: 100%; }
 
-        /* Oyun İçi Mesajlar */
-        #gameMsg {
-            position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 1.2rem; color: white; text-shadow: 0 0 10px white;
-            pointer-events: none; z-index: 15; width: 100%; text-align: center;
-            background: rgba(0,0,0,0.4); padding: 10px 0;
-        }
-        .bonus-text {
-            color: #FFD700 !important; text-shadow: 0 0 20px #FFD700 !important;
-            font-size: 1.5rem !important; font-weight: bold;
-            animation: popIn 0.5s ease-out; background: none !important;
-        }
-        @keyframes popIn {
-            0% { transform: translate(-50%, -50%) scale(0); }
-            80% { transform: translate(-50%, -50%) scale(1.2); }
-            100% { transform: translate(-50%, -50%) scale(1); }
-        }
+        /* SETUP SCREEN */
+        .palette-container { display: flex; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 15px; width: 100%; margin-bottom: 20px; }
+        .palette-option { width: 40px; height: 40px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform 0.2s; }
+        .palette-option.selected { border-color: #fff; transform: scale(1.1); box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .mode-container { display: flex; gap: 10px; width: 100%; margin-bottom: 20px; }
+        .mode-btn { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: #888; cursor: pointer; }
+        .mode-btn.selected { background: rgba(0,255,255,0.2); border-color: #00ffff; color: #fff; }
+        .setup-label { text-align: left; width: 100%; color: #aaa; font-size: 0.8rem; margin-bottom: 5px; }
+
+        /* HUD & CONTROLS */
+        #hud { position: absolute; top: env(safe-area-inset-top, 15px); left: 0; width: 100%; display: flex; justify-content: space-between; padding: 10px 20px; box-sizing: border-box; pointer-events: none; z-index: 10; }
+        #livesDisplay { color: #ff3333; font-size: 1.2rem; }
+        #pauseBtn { position: absolute; top: env(safe-area-inset-top, 15px); left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.15); color: rgba(255, 255, 255, 0.7); padding: 5px 20px; border-radius: 20px; font-size: 0.7rem; z-index: 110; cursor: pointer; pointer-events: auto; backdrop-filter: blur(4px); letter-spacing: 2px; white-space: nowrap; transition: all 0.2s; }
+        #pauseBtn:active { background: rgba(255, 255, 255, 0.2); color: white; }
+        
+        .control-panel { position: absolute; bottom: 0; width: 50%; height: 40%; pointer-events: none; transition: background 0.15s; z-index: 5; border-top: 1px solid rgba(255,255,255,0.05); }
+        #leftPanel { left: 0; background: linear-gradient(to top, rgba(0, 50, 0, 0.6), transparent); border-right: 1px solid rgba(255,255,255,0.05); }
+        #rightPanel { right: 0; background: linear-gradient(to top, rgba(50, 0, 0, 0.6), transparent); }
+        .control-letter { position: absolute; bottom: 20px; width: 100%; text-align: center; font-size: 8rem; font-weight: 900; opacity: 0.1; color: white; }
+        .panel-active-left { background: linear-gradient(to top, rgba(0, 150, 0, 0.8), rgba(0, 50, 0, 0.3)) !important; }
+        .panel-active-right { background: linear-gradient(to top, rgba(150, 0, 0, 0.8), rgba(50, 0, 0, 0.3)) !important; }
+
         @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
-
-        .stat-box {
-            border: 1px solid rgba(255,255,255,0.2); padding: 20px;
-            border-radius: 10px; background: rgba(255,255,255,0.05);
-            margin: 20px 0; width: 80%;
-        }
-        .stat-line { font-size: 1.2rem; margin: 10px 0; color: #ddd; }
-        .highlight { color: #00ffff; font-weight: bold; font-size: 1.4rem; }
-
     </style>
 </head>
 <body>
 
 <div id="gameContainer">
     <canvas id="gameCanvas"></canvas>
-
-    <!-- PAUSE BUTTON (YENİ TARZ) -->
+    
+    <!-- PAUSE BUTONU -->
     <div id="pauseBtn" class="hidden">= PAUSE =</div>
 
     <!-- HUD -->
     <div id="hud" class="hidden">
-        <div class="hud-group">
+        <div>
             <div id="livesDisplay">❤❤❤</div>
-            <div class="signature">powered by gurkan</div>
-            <div id="levelDisplay" class="hud-text">LVL 01</div>
+            <div style="font-size:0.6rem; opacity:0.5; font-style:italic;">powered by gurkan</div>
+            <div id="levelDisplay">LVL 01</div>
         </div>
-        <div class="hud-group" style="text-align: right;">
-            <div id="scoreDisplay" class="hud-text" style="font-size: 1.2rem; color: #fff;">0000</div>
-            <div id="playerNameDisplay" class="hud-text" style="font-size: 0.7rem; color: #aaa;">OYUNCU</div>
+        <div style="text-align: right;">
+            <div id="scoreDisplay">0000</div>
+            <div id="playerNameDisplay" style="font-size:0.7rem; color:#aaa;">OYUNCU</div>
         </div>
     </div>
-    
-    <div id="progressBarContainer" class="hidden"><div id="progressBar"></div></div>
 
     <div id="leftPanel" class="control-panel hidden"><div class="control-letter">L</div></div>
     <div id="rightPanel" class="control-panel hidden"><div class="control-letter">R</div></div>
 
-    <div id="gameMsg" class="hidden">DEVAM ETMEK İÇİN DOKUN</div>
-
-    <!-- KURULUM EKRANI -->
+    <!-- 1. SETUP EKRANI -->
     <div id="setupScreen" class="ui-layer">
-        <h1>NEON<br>TIRMANIŞ</h1>
+        <h1>NEON<br>ASCENT</h1>
+        <div class="setup-label">İSİM</div>
+        <input type="text" id="playerNameInput" placeholder="RUMUZ GİR" maxlength="12" autocomplete="off">
         
-        <div class="setup-group">
-            <div class="setup-label">İSİM</div>
-            <input type="text" id="playerNameInput" placeholder="RUMUZ (Opsiyonel)" maxlength="12" autocomplete="off">
+        <div class="setup-label">TEMA</div>
+        <div class="palette-container" id="paletteSelector"></div>
+        
+        <div class="setup-label">MOD</div>
+        <div class="mode-container">
+            <div class="mode-btn selected" data-mode="dynamic">AKICI<br><span style="font-size:0.6rem">Sürekli Akar</span></div>
+            <div class="mode-btn" data-mode="tactical">TAKTİK<br><span style="font-size:0.6rem">Duraklamalı</span></div>
         </div>
-
-        <div class="setup-group">
-            <div class="setup-label">TEMA SEÇ</div>
-            <div class="palette-container" id="paletteSelector">
-                <!-- JS -->
-            </div>
-        </div>
-
-        <div class="setup-group">
-            <div class="setup-label">OYUN MODU</div>
-            <div class="mode-container">
-                <div class="mode-btn selected" data-mode="dynamic">
-                    AKICI
-                    <span class="mode-desc">Durmadan Akar</span>
-                </div>
-                <div class="mode-btn" data-mode="tactical">
-                    TAKTİKSEL
-                    <span class="mode-desc">Duraklamalı</span>
-                </div>
-            </div>
-        </div>
-
-        <button id="enterGameBtn" class="action-btn">BAŞLA</button>
+        
+        <button id="enterGameBtn" class="action-btn">OYUNA BAŞLA</button>
+        <button id="showLeaderboardBtn" class="menu-btn" style="margin-top:20px; border-color:#ffcc00; color:#ffcc00;">🏆 LİDERLİK TABLOSU</button>
     </div>
 
-    <!-- BAŞLANGIÇ BİLGİ EKRANI -->
+    <!-- 2. LİDERLİK TABLOSU -->
+    <div id="leaderboardScreen" class="ui-layer hidden">
+        <h1 style="color:#ffcc00;">EN İYİLER</h1>
+        <div id="leaderboardList" class="score-list">
+            <div class="loading-text">Yükleniyor...</div>
+        </div>
+        <button id="closeLeaderboardBtn" class="menu-btn" style="margin-top:30px;">GERİ DÖN</button>
+    </div>
+
+    <!-- 3. BAŞLAMA EKRANI -->
     <div id="startScreen" class="ui-layer hidden">
-        <h1 id="welcomeText">HAZIR MISIN?</h1>
-        <p style="font-size: 0.9rem; color: #ccc; max-width: 80%; line-height: 1.6;">
-            Seçtiğin mod: <span id="selectedModeText" style="color:#00ffff">AKICI</span><br><br>
-            <b>MOBİL:</b> Sol / Sağ Dokun<br>
-            <b>PC:</b> <span style="color:#00ff00">Sol CTRL</span> / <span style="color:#ff3333">Sağ SHIFT</span><br>
-            Her 5. Bölümde <span style="color:#ff3333">CAN</span> kazanırsın!
-        </p>
-        <button id="startBtn" class="action-btn">HAZIRLAN</button>
+        <h1>HAZIR MISIN?</h1>
+        <p style="color:#ccc;">5. Bölüm ve katlarında<br><span style="color:#ff3333">CAN</span> kazanırsın!</p>
+        <button id="startBtn" class="action-btn">BAŞLAT</button>
     </div>
 
-    <!-- PAUSE MENU -->
+    <!-- 4. PAUSE MENÜSÜ -->
     <div id="pauseMenu" class="ui-layer hidden">
         <h1>DURAKLATILDI</h1>
         <button id="resumeBtn" class="menu-btn">DEVAM ET</button>
         <button id="toggleSoundBtn" class="menu-btn">SES: AÇIK 🔊</button>
-        <button id="backToStartBtn" class="menu-btn" style="border-color:#ff3333; color:#ffaaaa;">BAŞLANGIÇA DÖN</button>
+        <button id="backToStartBtn" class="menu-btn" style="border-color:#ff3333;">ÇIKIŞ</button>
     </div>
 
-    <!-- ARA EKRANLAR -->
-    <div id="lifeLostScreen" class="ui-layer hidden">
-        <h1 style="color: #ffaa00;">DİKKAT!</h1>
-        <p id="lifeLostMsg" style="font-size: 1.1rem; color: #fff;">Canın Kaldı.</p>
-        <button id="continueBtn" class="action-btn">DEVAM ET</button>
-    </div>
-
+    <!-- 5. OYUN BİTTİ -->
     <div id="gameOverScreen" class="ui-layer hidden">
         <h1 style="color: #ff3333;">OYUN BİTTİ</h1>
-        <div class="stat-box">
-            <div class="stat-line">OYUNCU: <span id="goName" class="highlight"></span></div>
-            <div class="stat-line">SKOR: <span id="goScore" class="highlight"></span></div>
-            <div class="stat-line">SEVİYE: <span id="goLevel" class="highlight"></span></div>
-        </div>
+        <div style="font-size:1.5rem; margin:20px;" id="finalScoreDisplay">SKOR: 0</div>
         <button id="retryBtn" class="action-btn">TEKRAR</button>
-        <button id="goBackBtn" class="menu-btn" style="margin-top:10px;">MENÜYE DÖN</button>
+        <button id="goBackBtn" class="menu-btn">MENÜYE DÖN</button>
     </div>
 
+    <!-- 6. BÖLÜM GEÇİLDİ -->
     <div id="levelCompleteScreen" class="ui-layer hidden">
-        <h1 style="color: #33ff33;">HARİKA!</h1>
-        <p id="levelCompleteMsg" style="color:#ccc; margin-bottom:20px;">Bölüm Tamamlandı.</p>
+        <h1 style="color: #33ff33;">BAŞARDIN!</h1>
+        <p id="levelMsg" style="color:#ccc;">Bölüm Tamamlandı.</p>
         <button id="nextLevelBtn" class="action-btn">DEVAM</button>
+    </div>
+    
+    <!-- 7. CAN KAYBI -->
+    <div id="lifeLostScreen" class="ui-layer hidden">
+        <h1 style="color: #ffaa00;">DİKKAT!</h1>
+        <p id="lifeMsg">Canın Kaldı.</p>
+        <button id="continueBtn" class="action-btn">DEVAM ET</button>
     </div>
 </div>
 
 <script>
+    // --- FIREBASE AYARLARI ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyCZZRiMNicsrrrtFtlUczb5qr-CGo-R4yk",
+        authDomain: "neonascent-5634b.firebaseapp.com",
+        projectId: "neonascent-5634b",
+        storageBucket: "neonascent-5634b.firebasestorage.app",
+        messagingSenderId: "635886298252",
+        appId: "1:635886298252:web:744671039f672b0784c7a9"
+    };
+
+    let db;
+    // Firebase Bağlantısı (Hata Yönetimli)
+    try {
+        if(typeof firebase !== 'undefined') {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log("Firebase Veritabanı Bağlandı.");
+        } else {
+            console.error("Firebase SDK yüklenemedi. İnternet bağlantısını kontrol et.");
+        }
+    } catch (e) {
+        console.error("Firebase Hatası:", e);
+    }
+
+    // --- REKOR KAYDETME ---
+    function saveScoreToCloud(name, score) {
+        if (!db) { console.log("DB yok, skor kaydedilemedi."); return; }
+        db.collection("neon_scores").add({
+            name: name,
+            score: score,
+            date: firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .then(() => console.log("Skor kaydedildi."))
+        .catch((error) => console.error("Skor hatası:", error));
+    }
+
+    // --- REKORLARI ÇEKME ---
+    function fetchLeaderboard() {
+        if (!db) {
+            document.getElementById('leaderboardList').innerHTML = "<div style='text-align:center'>Bağlantı Yok</div>";
+            return;
+        }
+        const list = document.getElementById('leaderboardList');
+        list.innerHTML = '<div class="loading-text">Yükleniyor...</div>';
+
+        db.collection("neon_scores")
+          .orderBy("score", "desc")
+          .limit(10)
+          .get()
+          .then((querySnapshot) => {
+              let html = "";
+              let rank = 1;
+              querySnapshot.forEach((doc) => {
+                  const data = doc.data();
+                  // İsim güvenliği
+                  const safeName = data.name ? data.name.replace(/</g, "&lt;") : "Anonim";
+                  html += `<div class="score-item"><span>#${rank} ${safeName}</span><span>${data.score}</span></div>`;
+                  rank++;
+              });
+              if (html === "") html = "<div style='text-align:center'>Henüz rekor yok.</div>";
+              list.innerHTML = html;
+          })
+          .catch((error) => {
+              list.innerHTML = "Veri alınamadı.";
+              console.error(error);
+          });
+    }
+
+    // --- OYUN DEĞİŞKENLERİ ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
+    // Renk Temaları
     const themes = [
         { name: 'SİBER', bg: ['#1a1a1a', '#000000'], player: '#00ffff', obs1: '#ff00cc', obs2: '#3333ff' },
         { name: 'ZEHİR', bg: ['#0a1a0a', '#000000'], player: '#00ff00', obs1: '#9900ff', obs2: '#ccff00' },
         { name: 'MAGMA', bg: ['#1a0a00', '#000000'], player: '#ffcc00', obs1: '#ff3300', obs2: '#ff9900' },
         { name: 'BUZUL', bg: ['#001a1a', '#000000'], player: '#ffffff', obs1: '#00ffff', obs2: '#0088ff' }
     ];
-
-    let selectedThemeIndex = 0;
-    let selectedGameMode = 'dynamic'; 
     let currentTheme = themes[0];
-    let isMuted = false; 
-    
-    const paletteSelector = document.getElementById('paletteSelector');
-    const modeBtns = document.querySelectorAll('.mode-btn');
-    const setupScreen = document.getElementById('setupScreen');
-    const startScreen = document.getElementById('startScreen');
-    const playerNameInput = document.getElementById('playerNameInput');
-    const enterGameBtn = document.getElementById('enterGameBtn');
-    const welcomeText = document.getElementById('welcomeText');
-    const selectedModeText = document.getElementById('selectedModeText');
-    const gameContainer = document.getElementById('gameContainer');
+    let selectedGameMode = 'dynamic';
 
+    let gameState = 'SETUP';
+    let animationId;
+    let playerName = "OYUNCU";
+    let score = 0, level = 1, lives = 3;
+    const MAX_LIVES = 5;
+    let obstacles = [], particles = [];
+    let scrollSpeed = 0, distanceTraveled = 0, levelDistance = 2000;
+    let finishLineSpawned = false;
+    let isMuted = false;
+
+    const player = { x: 0, y: 0, radius: 10, vx: 0, vy: 0, speed: 9, jumpPower: -11, onGround: false, invincibleTimer: 0 };
+
+    // --- UI ELEMENTLERİNİ SEÇ ---
+    const screens = {
+        setup: document.getElementById('setupScreen'),
+        leaderboard: document.getElementById('leaderboardScreen'),
+        start: document.getElementById('startScreen'),
+        gameOver: document.getElementById('gameOverScreen'),
+        level: document.getElementById('levelCompleteScreen'),
+        life: document.getElementById('lifeLostScreen'),
+        pause: document.getElementById('pauseMenu')
+    };
     const hud = document.getElementById('hud');
-    const pbContainer = document.getElementById('progressBarContainer');
-    const leftPanel = document.getElementById('leftPanel');
-    const rightPanel = document.getElementById('rightPanel');
-    const gameMsg = document.getElementById('gameMsg');
-    const livesDisplay = document.getElementById('livesDisplay');
-    const levelDisplay = document.getElementById('levelDisplay');
-    const scoreDisplay = document.getElementById('scoreDisplay');
-    const playerNameDisplay = document.getElementById('playerNameDisplay');
-    const progressBar = document.getElementById('progressBar');
-    const gameOverScreen = document.getElementById('gameOverScreen');
-    const levelCompleteScreen = document.getElementById('levelCompleteScreen');
-    const lifeLostScreen = document.getElementById('lifeLostScreen');
-    
     const pauseBtn = document.getElementById('pauseBtn');
-    const pauseMenu = document.getElementById('pauseMenu');
-    const resumeBtn = document.getElementById('resumeBtn');
-    const backToStartBtn = document.getElementById('backToStartBtn');
-    const toggleSoundBtn = document.getElementById('toggleSoundBtn');
-    const goBackBtn = document.getElementById('goBackBtn');
+    const panels = [document.getElementById('leftPanel'), document.getElementById('rightPanel')];
+    const nameInput = document.getElementById('playerNameInput');
+    const displays = {
+        name: document.getElementById('playerNameDisplay'),
+        score: document.getElementById('scoreDisplay'),
+        level: document.getElementById('levelDisplay'),
+        lives: document.getElementById('livesDisplay'),
+        finalScore: document.getElementById('finalScoreDisplay'),
+        levelMsg: document.getElementById('levelMsg'),
+        lifeMsg: document.getElementById('lifeMsg')
+    };
 
-    const startBtn = document.getElementById('startBtn');
-    const retryBtn = document.getElementById('retryBtn');
-    const nextLevelBtn = document.getElementById('nextLevelBtn');
-    const continueBtn = document.getElementById('continueBtn');
-
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // --- SES FONKSİYONLARI ---
+    function initAudio() { if(audioCtx.state === 'suspended') audioCtx.resume(); }
     
-    function initAudio() {
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
-    }
-
     function playTone(freq, type, duration, vol = 0.1) {
-        if (isMuted) return; 
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        
+        if (isMuted || audioCtx.state === 'suspended') return;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.connect(gain);
@@ -491,557 +292,279 @@
         osc.stop(audioCtx.currentTime + duration);
     }
 
-    function initSetupUI() {
-        themes.forEach((t, i) => {
-            const btn = document.createElement('div');
-            btn.className = `palette-option ${i === 0 ? 'selected' : ''}`;
-            btn.style.background = `linear-gradient(135deg, ${t.obs1}, ${t.obs2})`;
-            btn.onclick = () => {
-                document.querySelectorAll('.palette-option').forEach(el => el.classList.remove('selected'));
-                btn.classList.add('selected');
-                selectedThemeIndex = i;
-            };
-            paletteSelector.appendChild(btn);
-        });
+    // --- SETUP EKRANI BAŞLATMA ---
+    // Tema Seçici Butonları
+    const paletteSelector = document.getElementById('paletteSelector');
+    themes.forEach((t, i) => {
+        const btn = document.createElement('div');
+        btn.className = `palette-option ${i===0?'selected':''}`;
+        btn.style.background = `linear-gradient(135deg, ${t.obs1}, ${t.obs2})`;
+        btn.onclick = () => {
+            document.querySelectorAll('.palette-option').forEach(el=>el.classList.remove('selected'));
+            btn.classList.add('selected');
+            currentTheme = t;
+            document.getElementById('gameContainer').style.background = `radial-gradient(circle at center, ${t.bg[0]} 0%, ${t.bg[1]} 100%)`;
+        };
+        paletteSelector.appendChild(btn);
+    });
 
-        modeBtns.forEach(btn => {
-            btn.onclick = () => {
-                modeBtns.forEach(el => el.classList.remove('selected'));
-                btn.classList.add('selected');
-                selectedGameMode = btn.dataset.mode;
-            };
-        });
-    }
-    initSetupUI();
+    // Mod Seçici Butonları
+    const modeBtns = document.querySelectorAll('.mode-btn');
+    modeBtns.forEach(btn => {
+        btn.onclick = () => {
+            modeBtns.forEach(el=>el.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedGameMode = btn.dataset.mode;
+        };
+    });
 
-    let gameState = 'SETUP'; 
-    let animationId;
-    let playerName = "OYUNCU";
-    let level = 1;
-    let score = 0;
-    let lives = 3;
-    const MAX_LIVES = 5;
-    let distanceTraveled = 0;
-    let levelDistance = 2000;
-    let speedMultiplier = 1;
-    let finishLineSpawned = false;
-    let hoverTime = 0;
-    let startY = 0;
-
-    const player = {
-        x: 0, y: 0, radius: 10, vx: 0, vy: 0,
-        speed: 9, jumpPower: -11,
-        invincibleTimer: 0,
-        onGround: false 
+    // --- BUTON OLAYLARI ---
+    document.getElementById('enterGameBtn').onclick = () => {
+        initAudio();
+        let val = nameInput.value.trim();
+        playerName = val ? val.toUpperCase() : "MİSAFİR";
+        displays.name.innerText = playerName;
+        screens.setup.classList.add('hidden');
+        screens.start.classList.remove('hidden');
+        gameState = 'MENU';
     };
 
-    let obstacles = [];
-    let particles = [];
+    document.getElementById('showLeaderboardBtn').onclick = () => {
+        fetchLeaderboard();
+        screens.setup.classList.add('hidden');
+        screens.leaderboard.classList.remove('hidden');
+    };
+    document.getElementById('closeLeaderboardBtn').onclick = () => {
+        screens.leaderboard.classList.add('hidden');
+        screens.setup.classList.remove('hidden');
+    };
 
-    function movePlayer(side) {
-        if (side === 'left') {
-            player.vx = -player.speed;
-            player.vy = player.jumpPower;
-            player.onGround = false; 
-            visualizeTouch('left');
-            createParticles(player.x, player.y + 10, 3, currentTheme.player);
-            playTone(300, 'triangle', 0.1);
-        } else if (side === 'right') {
-            player.vx = player.speed;
-            player.vy = player.jumpPower;
-            player.onGround = false;
-            visualizeTouch('right');
-            createParticles(player.x, player.y + 10, 3, currentTheme.player);
-            playTone(400, 'triangle', 0.1);
-        }
-    }
-
-    enterGameBtn.addEventListener('click', function() {
-        initAudio();
-        let name = playerNameInput.value.trim();
-        if (!name) name = "OYUNCU";
-        playerName = name.toUpperCase();
-        playerNameDisplay.innerText = playerName;
-        currentTheme = themes[selectedThemeIndex];
-        gameContainer.style.background = `radial-gradient(circle at center, ${currentTheme.bg[0]} 0%, ${currentTheme.bg[1]} 100%)`;
-        const modeName = selectedGameMode === 'dynamic' ? 'AKICI (HARDCORE)' : 'TAKTİKSEL (DURAKLAMALI)';
-        selectedModeText.innerText = modeName;
-        welcomeText.innerText = `MERHABA ${playerName}`;
-        setupScreen.classList.add('hidden');
-        startScreen.classList.remove('hidden');
-        gameState = 'MENU';
-    });
-
-    startBtn.addEventListener('click', () => { initAudio(); prepareGame(); });
-    retryBtn.addEventListener('click', () => { initAudio(); restartGame(); });
-    nextLevelBtn.addEventListener('click', () => { initAudio(); nextLevel(); });
-    
-    continueBtn.addEventListener('click', () => {
-        initAudio();
-        lifeLostScreen.classList.add('hidden');
-        hud.classList.remove('hidden'); 
-        pbContainer.classList.remove('hidden');
-        leftPanel.classList.remove('hidden');
-        rightPanel.classList.remove('hidden');
-        pauseBtn.classList.remove('hidden'); 
-        player.invincibleTimer = 60; 
-        enterWaitingState(false); 
-    });
-
-    pauseBtn.addEventListener('click', () => {
-        if (gameState === 'PLAYING' || gameState === 'WAITING') {
-            gameState = 'PAUSED';
-            pauseBtn.classList.add('hidden'); 
-            pauseMenu.classList.remove('hidden'); 
-            hud.classList.add('hidden');
-            pbContainer.classList.add('hidden');
-            leftPanel.classList.add('hidden');
-            rightPanel.classList.add('hidden');
-        }
-    });
-
-    resumeBtn.addEventListener('click', () => {
-        pauseMenu.classList.add('hidden');
-        pauseBtn.classList.remove('hidden');
-        enterWaitingState(false); 
-    });
-
-    toggleSoundBtn.addEventListener('click', () => {
-        isMuted = !isMuted;
-        toggleSoundBtn.innerText = isMuted ? "SES: KAPALI 🔇" : "SES: AÇIK 🔊";
-    });
-
-    backToStartBtn.addEventListener('click', () => {
-        pauseMenu.classList.add('hidden');
-        setupScreen.classList.remove('hidden');
-        gameState = 'SETUP';
-    });
-
-    goBackBtn.addEventListener('click', () => {
-        gameOverScreen.classList.add('hidden');
-        setupScreen.classList.remove('hidden');
-        gameState = 'SETUP';
-    });
-
-    function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        player.radius = canvas.width * 0.03;
-        if (gameState === 'MENU' || gameState === 'WAITING') {
-            player.x = canvas.width / 2;
-            player.y = canvas.height - canvas.height * 0.2;
-            startY = player.y;
-        }
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
-    function handleTouch(e) {
-        if (e.target === pauseBtn || e.target.closest('#pauseBtn')) return;
-        if (gameState === 'PAUSED' || gameState === 'SETUP' || gameState === 'MENU' || gameState === 'GAMEOVER' || gameState === 'LEVELCOMPLETE' || gameState === 'LIFE_LOST') return;
-        
-        e.preventDefault();
-
-        if (gameState === 'WAITING') {
-            gameState = 'PLAYING';
-            gameMsg.classList.add('hidden');
-            playTone(600, 'sine', 0.2);
-        }
-
-        if (gameState === 'PLAYING') {
-            let clientX;
-            if (e.type === 'touchstart') clientX = e.touches[0].clientX;
-            else if (e.type === 'mousedown') clientX = e.clientX;
-
-            const mid = canvas.width / 2;
-            if (clientX < mid) movePlayer('left');
-            else movePlayer('right');
-        }
-    }
-
-    function handleKey(e) {
-        if (gameState === 'PAUSED' || gameState === 'SETUP' || gameState === 'MENU' || gameState === 'GAMEOVER' || gameState === 'LEVELCOMPLETE' || gameState === 'LIFE_LOST') return;
-
-        if (gameState === 'WAITING') {
-            if (e.code === 'ControlLeft' || e.code === 'ShiftRight') {
-                gameState = 'PLAYING';
-                gameMsg.classList.add('hidden');
-                playTone(600, 'sine', 0.2);
-            }
-        }
-
-        if (gameState === 'PLAYING') {
-            if (e.code === 'ControlLeft') movePlayer('left');
-            if (e.code === 'ShiftRight') movePlayer('right');
-        }
-    }
-
-    function visualizeTouch(side) {
-        if(side === 'left') {
-            leftPanel.classList.add('panel-active-left');
-            setTimeout(() => leftPanel.classList.remove('panel-active-left'), 150);
-        } else {
-            rightPanel.classList.add('panel-active-right');
-            setTimeout(() => rightPanel.classList.remove('panel-active-right'), 150);
-        }
-    }
-
-    window.addEventListener('touchstart', handleTouch, {passive: false});
-    window.addEventListener('mousedown', handleTouch);
-    window.addEventListener('keydown', handleKey);
-
-    function prepareGame() {
-        lives = 3;
-        level = 1;
-        score = 0;
-        startScreen.classList.add('hidden');
-        loadLevelSettings();
-        enterWaitingState(true);
-    }
-
-    function restartGame() {
-        lives = 3;
-        level = 1;
-        score = 0;
-        gameOverScreen.classList.add('hidden');
-        loadLevelSettings();
-        enterWaitingState(true);
-    }
-
-    function nextLevel() {
-        level++;
-        levelCompleteScreen.classList.add('hidden');
-        loadLevelSettings();
-        enterWaitingState(true);
-    }
-
-    function enterWaitingState(resetPos = false) {
-        hud.classList.remove('hidden');
-        pbContainer.classList.remove('hidden');
-        leftPanel.classList.remove('hidden');
-        rightPanel.classList.remove('hidden');
-        pauseBtn.classList.remove('hidden'); 
-        
-        gameMsg.innerText = resetPos ? "BAŞLAMAK İÇİN DOKUN" : "DEVAM ETMEK İÇİN DOKUN";
-        gameMsg.style.animation = "pulse 1.5s infinite";
-        gameMsg.className = ""; 
-        gameMsg.classList.remove('hidden');
-        
-        if (resetPos) {
-            player.x = canvas.width / 2;
-            player.y = canvas.height - canvas.height * 0.25;
-        } else {
-            player.y = Math.min(player.y, canvas.height - 150); 
-            player.x = canvas.width / 2; 
-        }
-
-        startY = player.y;
-        player.vx = 0;
-        player.vy = 0;
-        player.onGround = false;
-        if (gameState !== 'LIFE_LOST') player.invincibleTimer = 0;
-        
-        gameState = 'WAITING';
-        hoverTime = 0;
-        
-        updateHUD();
+    document.getElementById('startBtn').onclick = () => { initAudio(); prepareGame(); };
+    document.getElementById('retryBtn').onclick = () => { initAudio(); restartGame(); };
+    document.getElementById('nextLevelBtn').onclick = () => { initAudio(); nextLevel(); };
+    document.getElementById('continueBtn').onclick = () => {
+        screens.life.classList.add('hidden');
+        showGameUI();
+        player.invincibleTimer = 60; // 1 saniye koruma
+        gameState = 'PLAYING';
         gameLoop();
+    };
+    document.getElementById('goBackBtn').onclick = () => {
+        screens.gameOver.classList.add('hidden');
+        screens.setup.classList.remove('hidden');
+        gameState = 'SETUP';
+    };
+
+    // Pause
+    pauseBtn.onclick = () => {
+        if(gameState === 'PLAYING') {
+            gameState = 'PAUSED';
+            pauseBtn.classList.add('hidden');
+            screens.pause.classList.remove('hidden');
+            hideGameUI();
+        }
+    };
+    document.getElementById('resumeBtn').onclick = () => {
+        screens.pause.classList.add('hidden');
+        showGameUI();
+        gameState = 'PLAYING';
+        gameLoop();
+    };
+    document.getElementById('toggleSoundBtn').onclick = function() {
+        isMuted = !isMuted;
+        this.innerText = isMuted ? "SES: KAPALI 🔇" : "SES: AÇIK 🔊";
+    };
+    document.getElementById('backToStartBtn').onclick = () => {
+        screens.pause.classList.add('hidden');
+        screens.setup.classList.remove('hidden');
+        gameState = 'SETUP';
+    };
+
+    // --- OYUN DÖNGÜSÜ YARDIMCILARI ---
+    function showGameUI() { hud.classList.remove('hidden'); pauseBtn.classList.remove('hidden'); panels.forEach(p=>p.classList.remove('hidden')); }
+    function hideGameUI() { hud.classList.add('hidden'); pauseBtn.classList.add('hidden'); panels.forEach(p=>p.classList.add('hidden')); }
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; player.radius = canvas.width * 0.03; }
+    window.addEventListener('resize', resize); resize();
+
+    function prepareGame() { level=1; score=0; lives=3; loadLevel(); screens.start.classList.add('hidden'); resetPlayerPos(); showGameUI(); gameState='PLAYING'; gameLoop(); }
+    function restartGame() { lives=3; score=0; level=1; loadLevel(); screens.gameOver.classList.add('hidden'); resetPlayerPos(); showGameUI(); gameState='PLAYING'; gameLoop(); }
+    function nextLevel() { level++; loadLevel(); screens.level.classList.add('hidden'); resetPlayerPos(); showGameUI(); gameState='PLAYING'; gameLoop(); }
+
+    function resetPlayerPos() { player.x = canvas.width/2; player.y = canvas.height-200; player.vx=0; player.vy=0; player.invincibleTimer=0; player.onGround=false; }
+
+    function loadLevel() {
+        levelDistance = 2000 + (level*500); distanceTraveled=0; finishLineSpawned=false; obstacles=[]; particles=[];
+        for(let i=0; i<5; i++) spawnObstacle(-i*350);
     }
 
-    function loadLevelSettings() {
-        levelDistance = 1500 + (level * 800); 
-        speedMultiplier = 1 + (level * 0.1);
-        finishLineSpawned = false;
-        distanceTraveled = 0;
-        obstacles = [];
-        particles = [];
-        for (let i = 0; i < 5; i++) {
-            spawnObstacle(-i * 350); // Başlangıç aralığı
+    // Engel Yaratma (Çakışma Önleyici ile)
+    function spawnObstacle(yOv) {
+        const side = Math.random()<0.5?'left':'right';
+        const w = canvas.width*(0.25+Math.random()*0.2);
+        let sy = -200;
+        if(yOv!==undefined) sy=yOv;
+        else if(obstacles.length>0) {
+            const top = obstacles.reduce((m,o)=>o.y<m.y?o:m, obstacles[0]);
+            sy = top.y - 350;
         }
-    }
-
-    // --- YENİ: ÇAKIŞMA ÖNLEYİCİ SPAWN MANTIĞI ---
-    function spawnObstacle(overrideY = null) {
-        const side = Math.random() < 0.5 ? 'left' : 'right';
-        const width = canvas.width * (0.2 + Math.random() * 0.25);
-        const height = 25;
-        
-        let spawnY = -200;
-        // Eğer manuel bir Y verilmediyse, en tepedeki engeli baz al
-        if (overrideY !== null) {
-            spawnY = overrideY;
-        } else if (obstacles.length > 0) {
-            // En üstteki (y'si en küçük olan) engeli bul
-            const topObs = obstacles.reduce((min, o) => o.y < min.y ? o : min, obstacles[0]);
-            spawnY = topObs.y - 350; // Sabit güvenli mesafe
-        }
-
-        let moveChance = Math.max(0, (level - 2) * 0.15);
-        moveChance = Math.min(0.8, moveChance);
-        const isMoving = Math.random() < moveChance;
         
         obstacles.push({
-            x: side === 'left' ? 0 : canvas.width - width,
-            y: spawnY,
-            width: width,
-            height: height,
-            type: 'obstacle',
-            moving: isMoving,
-            speed: (Math.random() + 1.5) * speedMultiplier,
-            color: side === 'left' ? currentTheme.obs1 : currentTheme.obs2
+            x: side==='left'?0:canvas.width-w, y:sy, width:w, height:25, type:'obstacle',
+            moving: Math.random() < Math.min(0.8, (level-1)*0.1),
+            speed: (1+Math.random())*(1+level*0.1),
+            color: side==='left'?currentTheme.obs1:currentTheme.obs2
         });
     }
 
-    function spawnFinishLine() {
-        obstacles.push({ x: 0, y: -300, width: canvas.width, height: 40, type: 'finish', color: '#00ff00' });
+    // --- KONTROLLER ---
+    function handleInput(e) {
+        if(gameState!=='PLAYING') return;
+        e.preventDefault();
+        const x = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        movePlayer(x < canvas.width/2 ? 'left' : 'right');
+    }
+    function handleKey(e) {
+        if(gameState!=='PLAYING') return;
+        if(e.code==='ControlLeft') movePlayer('left');
+        if(e.code==='ShiftRight') movePlayer('right');
     }
 
-    function createParticles(x, y, count, color) {
-        for (let i = 0; i < count; i++) {
-            particles.push({
-                x: x, y: y,
-                vx: (Math.random() - 0.5) * 10,
-                vy: (Math.random() - 0.5) * 10,
-                life: 1, color: color
-            });
-        }
+    function movePlayer(side) {
+        player.onGround = false;
+        player.vx = side==='left' ? -player.speed : player.speed;
+        player.vy = player.jumpPower;
+        const p = side==='left' ? panels[0] : panels[1];
+        p.classList.add(side==='left'?'panel-active-left':'panel-active-right');
+        setTimeout(()=>p.className='control-panel', 150);
+        createParticles(player.x, player.y, 5, '#fff');
+        playTone(300, 'triangle', 0.1);
     }
 
+    window.addEventListener('touchstart', handleInput, {passive:false});
+    window.addEventListener('mousedown', handleInput);
+    window.addEventListener('keydown', handleKey);
+
+    // --- UPDATE ---
     function update() {
-        if (gameState === 'WAITING') {
-            hoverTime += 0.1;
-            player.y = startY + Math.sin(hoverTime) * 10;
-            return; 
+        if(player.invincibleTimer>0) player.invincibleTimer--;
+        if(!player.onGround) player.vy+=0.6; else player.vy=0;
+        player.x+=player.vx; player.y+=player.vy;
+
+        // Duvarlar
+        if(player.x < player.radius) { player.x=player.radius; player.vx=0; }
+        if(player.x > canvas.width-player.radius) { player.x=canvas.width-player.radius; player.vx=0; }
+
+        // Scroll
+        let baseScroll = 2+level*0.2;
+        let catchUp = 0;
+        if(player.y < canvas.height*0.45) {
+            catchUp = (canvas.height*0.45) - player.y;
+            player.y = canvas.height*0.45;
         }
-
-        if (player.invincibleTimer > 0) player.invincibleTimer--;
-
-        if (!player.onGround) player.vy += 0.6;
-        else player.vy = 0;
-
-        player.x += player.vx;
-        player.y += player.vy;
-
-        if (player.x - player.radius <= 0) { player.x = player.radius; player.vx = 0; } 
-        else if (player.x + player.radius >= canvas.width) { player.x = canvas.width - player.radius; player.vx = 0; }
-
-        let scrollSpeed = 0;
-        const targetY = canvas.height * 0.45;
-        
-        if (player.y < targetY) {
-            scrollSpeed = targetY - player.y;
-            player.y = targetY; 
-        }
-
-        const baseSpeed = (2.5 + (level * 0.15)) * speedMultiplier;
-        if (selectedGameMode === 'dynamic') {
-            scrollSpeed += baseSpeed;
-        } else {
-            if (!player.onGround) scrollSpeed += baseSpeed;
-        }
-
-        if (!finishLineSpawned && distanceTraveled >= levelDistance) {
-            spawnFinishLine();
-            finishLineSpawned = true;
-        }
-
-        player.onGround = false; 
-
-        obstacles.forEach((obs, index) => {
-            obs.y += scrollSpeed;
-            
-            if (obs.type === 'obstacle' && obs.moving) {
-                obs.x += obs.speed;
-                if (obs.x + obs.width > canvas.width || obs.x < 0) obs.speed *= -1;
-            }
-
-            let testX = Math.max(obs.x, Math.min(player.x, obs.x + obs.width));
-            let testY = Math.max(obs.y, Math.min(player.y, obs.y + obs.height));
-            let distance = Math.sqrt((player.x - testX) ** 2 + (player.y - testY) ** 2);
-
-            if (distance <= player.radius) {
-                if (obs.type === 'finish') { completeLevel(); return; }
-                if (player.invincibleTimer > 0) return;
-
-                let isTopHit = (player.y < obs.y) && (player.vy >= 0);
-                if (isTopHit) {
-                    player.y = obs.y - player.radius; 
-                    player.vy = 0; 
-                    player.onGround = true; 
-                    player.y += scrollSpeed; 
-                } else {
-                    let isSideHit = (player.x < obs.x || player.x > obs.x + obs.width);
-                    if (isSideHit) {
-                        movePlayer(player.x < obs.x ? 'left' : 'right');
-                        player.vx *= -1.5;
-                        if (player.x < obs.x) player.x = obs.x - player.radius - 2;
-                        else player.x = obs.x + obs.width + player.radius + 2;
-                        playTone(200, 'square', 0.1);
-                        createParticles(testX, testY, 5, '#fff');
-                    } else {
-                        handleDeath();
-                    }
-                }
-            }
-
-            if (obs.y > canvas.height + 100) {
-                obstacles.splice(index, 1);
-                // --- DÖNGÜSEL ENGEL YARATMA ---
-                if (obs.type === 'obstacle') {
-                    score += 10 * level;
-                    if (!finishLineSpawned) spawnObstacle(); // Parametresiz çağırarak çakışmayı önle
-                }
-            }
-        });
-
-        if (player.y - player.radius > canvas.height) handleDeath();
-
+        scrollSpeed = (selectedGameMode==='tactical' && player.onGround) ? catchUp : baseScroll+catchUp;
         distanceTraveled += scrollSpeed;
-        let progress = (distanceTraveled / levelDistance) * 100;
-        progressBar.style.height = `${Math.min(progress, 100)}%`;
-        scoreDisplay.innerText = score.toString().padStart(4, '0');
 
-        particles.forEach((p, i) => {
-            p.x += p.vx; p.y += p.vy; p.life -= 0.05;
-            if(p.life <= 0) particles.splice(i, 1);
-        });
-    }
-
-    // --- YENİ: SOFTLOCK FIX ---
-    function handleDeath() {
-        if (player.invincibleTimer > 0) return;
-        playTone(100, 'sawtooth', 0.3);
-        lives--;
-        updateHUD();
-        
-        // Engelleri temizle ama FİNİŞ ÇİZGİSİNİ KORU
-        obstacles = obstacles.filter(o => o.type === 'finish' || Math.abs(o.y - player.y) > 300);
-
-        // Eğer her şeyi sildiysek ve finiş gelmediyse, hemen yeni engel at (Softlock önleyici)
-        if (obstacles.length === 0 && !finishLineSpawned) {
-            spawnObstacle(-canvas.height / 2);
+        if(!finishLineSpawned && distanceTraveled > levelDistance) {
+            obstacles.push({x:0, y:-300, width:canvas.width, height:40, type:'finish', color:'#00ff00'});
+            finishLineSpawned=true;
         }
 
-        if (lives > 0) {
-            gameState = 'LIFE_LOST';
-            cancelAnimationFrame(animationId);
-            hud.classList.add('hidden');
-            pauseBtn.classList.add('hidden'); 
-            pbContainer.classList.add('hidden');
-            leftPanel.classList.add('hidden');
-            rightPanel.classList.add('hidden');
-            document.getElementById('lifeLostMsg').innerText = `${lives} Canın kaldı. Pes etme!`;
-            lifeLostScreen.classList.remove('hidden');
-        } else {
-            endGame();
-        }
-    }
+        player.onGround = false;
+        obstacles.forEach((o,i) => {
+            o.y+=scrollSpeed;
+            if(o.moving && o.type==='obstacle') {
+                o.x+=o.speed;
+                if(o.x+o.width>canvas.width || o.x<0) o.speed*=-1;
+            }
 
-    function draw() {
-        ctx.fillStyle = 'rgba(5, 5, 5, 0.4)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Çarpışma
+            let tx = Math.max(o.x, Math.min(player.x, o.x+o.width));
+            let ty = Math.max(o.y, Math.min(player.y, o.y+o.height));
+            if(Math.sqrt((player.x-tx)**2 + (player.y-ty)**2) <= player.radius) {
+                if(o.type==='finish') { completeLevel(); return; }
+                if(player.invincibleTimer>0) return;
 
-        obstacles.forEach(obs => {
-            if (obs.type === 'finish') {
-                ctx.fillStyle = '#00ff00';
-                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-                ctx.fillStyle = '#000';
-                for(let i=0; i<obs.width; i+=20) ctx.fillRect(obs.x + i + 10, obs.y + obs.height/2, 10, obs.height/2);
-                ctx.shadowBlur = 20; ctx.shadowColor = '#00ff00';
-            } else {
-                ctx.globalAlpha = player.invincibleTimer > 0 ? 0.5 : 1;
-                ctx.fillStyle = obs.color;
-                ctx.shadowBlur = 10; ctx.shadowColor = obs.color;
-                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-                ctx.fillStyle = 'rgba(255,255,255,0.2)';
-                ctx.fillRect(obs.x, obs.y, obs.width, 2);
-                ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+                if(player.y < o.y && player.vy>=0) {
+                    player.onGround=true; player.y=o.y-player.radius; player.vy=0; player.y+=scrollSpeed;
+                } else {
+                    if(player.x<o.x || player.x>o.x+o.width) { player.vx*=-1.5; playTone(150,'square',0.1); }
+                    else handleDeath();
+                }
+            }
+            if(o.y > canvas.height+100) {
+                obstacles.splice(i,1);
+                if(o.type==='obstacle') { score+=10; if(!finishLineSpawned) spawnObstacle(); }
             }
         });
 
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-        ctx.fillStyle = currentTheme.player;
-        ctx.shadowBlur = 20; ctx.shadowColor = currentTheme.player;
-        ctx.fill();
-        ctx.closePath();
+        if(player.y > canvas.height) handleDeath();
         
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, player.radius * 0.6, 0, Math.PI * 2);
-        ctx.fillStyle = '#fff';
-        ctx.shadowBlur = 0; ctx.fill();
-        
-        particles.forEach(p => {
-            ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-            ctx.fillStyle = p.color; ctx.globalAlpha = p.life; ctx.fill(); ctx.globalAlpha = 1;
-        });
+        // HUD Update
+        displays.lives.innerText = "❤".repeat(lives);
+        displays.score.innerText = score.toString().padStart(4,'0');
+        displays.level.innerText = "LVL "+level;
+
+        particles.forEach((p,i)=>{ p.x+=p.vx; p.y+=p.vy; p.life-=0.05; if(p.life<=0) particles.splice(i,1); });
     }
 
-    function gameLoop() {
-        if (gameState === 'PLAYING' || gameState === 'WAITING') {
-            update();
-            draw();
-            animationId = requestAnimationFrame(gameLoop);
-        } else if (gameState === 'PAUSED') {
-            draw();
-            animationId = requestAnimationFrame(gameLoop);
-        }
+    function handleDeath() {
+        if(player.invincibleTimer>0) return;
+        lives--; playTone(100,'sawtooth',0.3);
+        
+        // Softlock Fix: Finiş harici tüm engelleri silme ama oyuncuya yer aç
+        obstacles = obstacles.filter(o => o.type==='finish' || Math.abs(o.y - player.y) > 300);
+        if(obstacles.length===0 && !finishLineSpawned) spawnObstacle(-canvas.height/2);
+
+        if(lives>0) {
+            gameState='LIFE_LOST'; cancelAnimationFrame(animationId);
+            hideGameUI();
+            displays.lifeMsg.innerText = `${lives} Canın Kaldı.`;
+            screens.life.classList.remove('hidden');
+        } else endGame();
     }
 
     function endGame() {
-        gameState = 'GAMEOVER';
-        cancelAnimationFrame(animationId);
-        hud.classList.add('hidden');
-        pauseBtn.classList.add('hidden'); 
-        pbContainer.classList.add('hidden');
-        leftPanel.classList.add('hidden');
-        rightPanel.classList.add('hidden');
-        gameOverScreen.classList.remove('hidden');
-        document.getElementById('goName').innerText = playerName;
-        document.getElementById('goScore').innerText = score;
-        document.getElementById('goLevel').innerText = level;
+        saveScoreToCloud(playerName, score);
+        gameState='GAMEOVER'; cancelAnimationFrame(animationId);
+        hideGameUI();
+        displays.finalScore.innerText = `SKOR: ${score}`;
+        screens.gameOver.classList.remove('hidden');
     }
 
     function completeLevel() {
-        gameState = 'LEVELCOMPLETE';
-        cancelAnimationFrame(animationId);
+        gameState='LEVELCOMPLETE'; cancelAnimationFrame(animationId);
+        let msg="Harika!";
+        if(level%5===0) {
+            if(lives<MAX_LIVES) { lives++; msg="BONUS CAN KAZANDIN! ❤"; playTone(600,'sine',0.2); }
+            else { score+=2000; msg="BONUS PUAN! (+2000)"; playTone(800,'square',0.4); }
+        } else playTone(800,'square',0.4);
         
-        let message = "Harika refleksler!";
-        if (level % 5 === 0) {
-            if (lives < MAX_LIVES) {
-                lives++;
-                message = "5. BÖLÜM TAMAMLANDI!\nBONUS CAN KAZANDIN! ❤";
-                playTone(600, 'sine', 0.2);
-                setTimeout(() => playTone(900, 'sine', 0.4), 200);
-            } else {
-                score += 2000;
-                message = "5. BÖLÜM TAMAMLANDI!\nBONUS PUAN! (+2000)";
-                playTone(800, 'square', 0.4);
-            }
-            updateHUD();
-        } else {
-            playTone(800, 'square', 0.4);
-        }
-        
-        document.getElementById('levelCompleteMsg').innerText = message;
-        hud.classList.add('hidden');
-        pauseBtn.classList.add('hidden'); 
-        pbContainer.classList.add('hidden');
-        leftPanel.classList.add('hidden');
-        rightPanel.classList.add('hidden');
-        levelCompleteScreen.classList.remove('hidden');
+        displays.levelMsg.innerText=msg;
+        hideGameUI();
+        screens.level.classList.remove('hidden');
     }
 
-    function updateHUD() {
-        let hearts = "";
-        for(let i=0; i<lives; i++) hearts += "❤";
-        livesDisplay.innerText = hearts;
-        levelDisplay.innerText = `LVL ${level.toString().padStart(2, '0')}`;
-        scoreDisplay.innerText = score.toString().padStart(4, '0');
-        progressBar.style.height = '0%';
+    function createParticles(x,y,c,color) { for(let i=0;i<c;i++) particles.push({x,y,vx:(Math.random()-0.5)*10,vy:(Math.random()-0.5)*10,life:1,color}); }
+    
+    function draw() {
+        ctx.fillStyle='rgba(5,5,5,0.4)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        obstacles.forEach(o=>{
+            ctx.fillStyle=o.type==='finish'?'#00ff00':o.color;
+            ctx.shadowBlur=10; ctx.shadowColor=o.color;
+            ctx.fillRect(o.x,o.y,o.width,o.height);
+        });
+        ctx.beginPath(); ctx.arc(player.x,player.y,player.radius,0,Math.PI*2);
+        ctx.fillStyle=currentTheme.player; ctx.shadowBlur=20; ctx.shadowColor=currentTheme.player; ctx.fill();
+        
+        particles.forEach(p=>{
+            ctx.beginPath(); ctx.arc(p.x,p.y,3,0,Math.PI*2);
+            ctx.fillStyle=p.color; ctx.globalAlpha=p.life; ctx.fill();
+        });
+        ctx.globalAlpha=1;
     }
+
+    function gameLoop() { if(gameState==='PLAYING'){ update(); draw(); animationId=requestAnimationFrame(gameLoop); } }
 
 </script>
-
 </body>
 </html>
